@@ -1,0 +1,115 @@
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
+import pandas as pd
+
+
+# Setup WebDriver
+service = Service(ChromeDriverManager().install())
+driver = webdriver.Chrome(service=service)
+
+# Define the base URL and the class we are interested in
+class_name = "style__font-bold___1k9Dl"
+
+# List to store the extracted values
+extracted_values = []
+
+x = int(input("Enter start page no:"))
+y = int(input("Enter end page no:"))
+label=input("enter the label letter :")
+# Loop through pages x to y
+for page in range(x, y+1):  
+    url = f"https://www.1mg.com/drugs-all-medicines?page={page}&label={label}"  
+    driver.get(url)
+    elements = driver.find_elements(By.CLASS_NAME, class_name)
+    for element in elements:
+        # Split the text by line breaks and check if "ADD" is present
+        lines = element.text.split("\n")
+        if "ADD" not in lines:
+            # Append medication name to extracted_values
+            extracted_values.append(lines[0])
+
+# Close the WebDriver
+driver.quit()
+
+# Get the file path from the user
+file_path = input("Enter the file path to save the Excel sheet (e.g., 'C:/Users/username/Documents/medications.xlsx'): ")
+
+# Convert the extracted values to a DataFrame
+df = pd.DataFrame({"Medication": extracted_values})
+
+# Write the DataFrame to an Excel file
+df.to_excel(file_path, index=False)
+
+print("Excel file created successfully.")
+
+
+# ----------------------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------------
+
+import openpyxl
+# Load the source Excel workbook
+source_workbook = openpyxl.load_workbook(r'')
+
+# Load the destination Excel workbook
+destination_workbook = openpyxl.load_workbook(r'')
+
+# Select the source worksheet
+source_sheet = source_workbook.active
+
+# Select the destination worksheet
+destination_sheet = destination_workbook.active
+
+# Initialize an empty list to store values from the first column
+first_column_values = []
+# Function to categorize medicine types
+def categorize_medicine_type(value):
+    if value is not None:  # Added check for None value
+        if "Capsule" in value:
+            return "Capsule"
+        elif "Tablet" in value:
+            return "Tablet"
+        elif "Syrup" in value:
+            return "Syrup"
+        elif "Suspension" in value:
+            return "Suspension"
+        elif "Drop" in value:
+            return "Drop"
+        elif "Injection" in value:
+            return "Injection"
+        elif "Ointment" in value:
+            return "Ointment"
+        elif "Cream" in value:
+            return "Cream"
+        elif "Powder" in value:
+            return "Powder"
+        elif "Soap" in value:
+            return "Soap"
+        elif "Lotion" in value:
+            return "Lotion"
+        elif "Suppository" in value:
+            return "Suppository"
+        elif "Gel" in value:
+            return "Gel"
+    return "Other"  # Return "Other" for None values
+
+# Function to process medicine names
+def process_medicine_name(name, category):
+    if name.endswith(category):
+        return name[:-len(category)].strip()
+    else:
+        return name
+
+# Iterate through the rows in the first column of the source sheet
+for row_index, row in enumerate(source_sheet.iter_rows(min_row=1, max_row=source_sheet.max_row, min_col=1, max_col=1), start=1):
+    original_value = row[0].value
+    first_column_values.append(original_value)
+    categorized_value = categorize_medicine_type(original_value)
+    processed_value = process_medicine_name(original_value, categorized_value)
+    destination_sheet.cell(row=row_index, column=1, value=original_value)  # Write original value
+    destination_sheet.cell(row=row_index, column=2, value=categorized_value)  # Write categorized value
+    destination_sheet.cell(row=row_index, column=3, value=processed_value)  # Write processed value
+
+# Save the changes to the destination workbook
+destination_workbook.save(r'C:\Users\mshar\OneDrive\Desktop\Automation projects\cbi.xlsx')
